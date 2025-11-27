@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 import datetime
-from baseModel import CustomerBase, Transaction ,Invoice , Customer , CustomerCreate
+from app.Api.baseModel import CustomerBase, Transaction ,Invoice , Customer , CustomerCreate
 
 app = FastAPI()
 
