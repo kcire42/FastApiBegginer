@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr, computed_field
 from typing import Union
+import datetime
 
 class CustomerBase(BaseModel):
     name: str
@@ -7,34 +8,49 @@ class CustomerBase(BaseModel):
     age: int
     email: EmailStr
     
-    @computed_field
-    @property
-    def id(self) -> int:
-        return hash(self.email) % 10000
+    # @computed_field
+    # @property
+    # def id(self) -> int:
+    #     return hash(self.email) % 10000
 
 class CustomerCreate(CustomerBase):
     pass
 
 class Customer(CustomerBase):
-    
-    pass
+    id : int
+    class Config:
+        from_attributes = True
 
 class Transaction(BaseModel):
-    id: int
     amount: float
     description: str
-    timestamp: str
+    timestamp: datetime.datetime
+
+# Modelo de SALIDA (Output) de una Transacción
+class TransactionOut(Transaction):
+    id: int
+    invoice_id: int # Necesario para mostrar la clave foránea
+    
+    class Config:
+        from_attributes = True
 
 class Invoice(BaseModel):
-    id: int
     customer: CustomerBase
     transaction: list[Transaction]
 
-    @computed_field
-    @property
-    def total_amount(self) -> float:
-        return sum(transaction.amount for transaction in self.transaction)
+
     
+# Modelo de SALIDA (Output) de una Factura
+class InvoiceOut(BaseModel):
+    id: int
+    customer: Customer # Usamos Customer (con ID)
+    # Usamos TransactionOut para la lista de transacciones (con IDs)
+    transactions: list[TransactionOut]
+    
+    class Config:
+        # Nota: El campo "transaction" en la entrada Pydantic se mapea 
+        # automáticamente a "transactions" en el modelo de salida de SQLAlchemy (models.py)
+        from_attributes = True
 
 
     

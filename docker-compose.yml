@@ -1,4 +1,4 @@
-version: '3.8'
+
 
 services:
   # 1. Servicio de la Base de Datos (postgres)
@@ -12,12 +12,15 @@ services:
       POSTGRES_USER: kcire
       POSTGRES_PASSWORD: 123456
       POSTGRES_DB: dbFastApi
-    volumes:
-      # Usamos el mismo volumen nombrado que creaste para mantener tus datos
-      - fastapi_db_volume:/var/lib/postgresql/data
     ports:
       # Exponemos el puerto para que puedas conectarte desde tu máquina
       - "5433:5432"
+    volumes:
+      # Usamos el mismo volumen nombrado que creaste para mantener tus datos
+      - fastapi_db_volume:/var/lib/postgresql/data
+    networks:
+      - fastapi-network
+    
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U kcire -d dbFastApi"]
       interval: 5s
@@ -26,25 +29,21 @@ services:
   
   # 2. Servicio de la Aplicación Python (web)
   web:
-    build: . # Usa el Dockerfile de la carpeta actual (la raíz)
-    container_name: fastApi_app
+    build: .
+    container_name: fastapi_app
     restart: always
     ports:
-      # Exponemos el puerto de FastAPI a tu máquina local
       - "8000:8000"
-    depends_on:
-      # Asegura que la DB esté lista antes de intentar conectar
-      postgres:
-        condition: service_healthy
-    environment:
-      # El host de la DB para la aplicación es el nombre del servicio (postgres)
-      DB_HOST: postgres 
     volumes:
-      # Mapea el código local al contenedor para desarrollo (opcional)
-      - .:/app 
+      - .:/app
+    depends_on:
+      - postgres
+    networks:
+      - fastapi-network
 
-# Definición de Volúmenes para Persistencia
+networks:
+  fastapi-network:
+
 volumes:
   fastapi_db_volume:
-    external: true # Usamos el volumen existente que creaste
-    # Si quieres que Docker lo cree, omite 'external: true'
+
