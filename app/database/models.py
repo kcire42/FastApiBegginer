@@ -13,13 +13,14 @@ class CustomerModel(base):
     description = Column(String)
     age = Column(Integer)
     email = Column(String, unique=True, index=True)
+    invoices = relationship("InvoiceModel", back_populates="customer")
 
 class InvoiceModel(base):
     __tablename__ = 'invoices'
     id = Column(Integer, primary_key=True, index=True)
     customer_id = Column(Integer, ForeignKey('customers.id'), nullable=False)
     transactions = relationship("TransactionModel", back_populates="invoice")
-    customer = relationship("CustomerModel")
+    customer = relationship("CustomerModel", back_populates="invoices")
 
 class TransactionModel(base):
     __tablename__ = 'transactions'

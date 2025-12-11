@@ -1,8 +1,10 @@
 from fastapi import HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
 from app.Api.baseModel import CustomerBase, Customer , CustomerCreate
+from app.Api.security import verify_api_token
 from app.database.databaseConnection import getDB
 from app.database.models import CustomerModel
+
 
 
 customer_router = APIRouter(prefix="/customers", tags=["customers"]) # routeur para la API de clientes
@@ -21,7 +23,7 @@ async def get_customer(customer_id: int, db : Session = Depends(getDB)):
     return customer
 
 @customer_router.post("/")
-async def create_customer(customer: CustomerCreate, db : Session = Depends(getDB)):
+async def create_customer(customer: CustomerCreate, db : Session = Depends(getDB), auth_token: str = Depends(verify_api_token)):
     dbCustomer = CustomerModel(**customer.model_dump())
     db.add(dbCustomer)
     db.commit()
@@ -30,7 +32,7 @@ async def create_customer(customer: CustomerCreate, db : Session = Depends(getDB
 
 
 @customer_router.delete("/{customer_id}")
-async def delete_customer(customer_id: int, db : Session = Depends(getDB)):
+async def delete_customer(customer_id: int, db : Session = Depends(getDB), auth_token: str = Depends(verify_api_token)):
     customer = db.query(CustomerModel).filter(CustomerModel.id == customer_id).first()
     if not customer:
         raise HTTPException(status_code=404, detail=f"Customer with ID {customer_id} not found")
@@ -39,7 +41,7 @@ async def delete_customer(customer_id: int, db : Session = Depends(getDB)):
     return {"detail": f"Customer with ID {customer_id} deleted"}
 
 @customer_router.patch("/{customer_id}", response_model=Customer)
-async def update_customer(customer_id: int, customer_update: CustomerBase, db : Session = Depends(getDB)):
+async def update_customer(customer_id: int, customer_update: CustomerBase, db : Session = Depends(getDB), auth_token: str = Depends(verify_api_token)):
     customer = db.query(CustomerModel).filter(CustomerModel.id == customer_id).first()
     if not customer:
         raise HTTPException(status_code=404, detail=f"Customer with ID {customer_id} not found")

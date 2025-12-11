@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, computed_field
+from pydantic import BaseModel, EmailStr, computed_field , field_validator
 from typing import Union
 import datetime
 
@@ -7,6 +7,13 @@ class CustomerBase(BaseModel):
     description: str 
     age: int
     email: EmailStr
+
+    @field_validator('age')
+    @classmethod
+    def age_must_be_positive(cls, v):
+        if v < 0:
+            raise ValueError('Age must be a positive integer')
+        return v
     
     # @computed_field
     # @property

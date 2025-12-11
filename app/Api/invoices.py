@@ -1,5 +1,5 @@
 from fastapi import HTTPException, Depends, APIRouter
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session , joinedload
 from app.Api.baseModel import Invoice , InvoiceOut 
 from app.database.databaseConnection import getDB
 from app.database.models import CustomerModel, TransactionModel, InvoiceModel
@@ -36,3 +36,13 @@ async def create_invoice(invoice: Invoice, db : Session = Depends(getDB)):
     db.refresh(dbInvoice)
     # Recarga las transacciones asociadas
     return dbInvoice
+
+
+@invoice_router.get("/by_customer/{customer_id}")
+async def get_invoices_by_customer(customer_id: int, db : Session = Depends(getDB)):
+    customer = db.query(CustomerModel).filter(CustomerModel.id == customer_id).options(
+        joinedload(CustomerModel.invoices).joinedload(InvoiceModel.transactions)
+    ).all()
+    if not customer:
+        raise HTTPException(status_code=404, detail=f"Customer with ID {customer_id} not found.")
+    return customer
